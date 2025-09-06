@@ -15,7 +15,7 @@ class AdvRepository
 
     public function getGeneralRecommendations($limit = 20)
     {
-        return Adv::with('user:id,name', 'category:id,name','created_at')
+        return Adv::with('user:id,name', 'category:id,name')
             ->where('is_active', 1)
             ->orderBy('interactions_count', 'desc')
             ->orderBy('views_count', 'desc')

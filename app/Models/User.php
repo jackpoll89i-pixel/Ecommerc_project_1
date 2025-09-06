@@ -104,7 +104,7 @@ class User extends Authenticatable
     public function activitiesAdvertisements()
     {
         return $this->belongsToMany(Adv::class, 'user_activities', 'user_id', 'adv_id')
-                    ->withPivot('activity_type')
+                    ->withPivot('activity_type', 'created_at')
                     ->withTimestamps();
     }
 

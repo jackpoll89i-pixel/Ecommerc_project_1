@@ -25,9 +25,10 @@ class RecommendedController extends Controller
         $limit = max(1, min(50, $limitParam));
 
         if (auth()->check()) {
+            // dump('User is checked: ' . auth()->id());
             return $this->getSmartRecommendations($request, $limit);
         }
-
+        // dump('User is checked: ' . auth()->id());
         $ads = Adv::with('user:id,name', 'category:id,name')
             ->where('is_active', 1)
             ->orderBy('interactions_count', 'desc')
@@ -42,6 +43,7 @@ class RecommendedController extends Controller
     {
         $user = auth()->user();
         
+        
         $recentAds = $user->activitiesAdvertisements()
             ->orderBy('user_activities.created_at', 'desc')
             ->take(3)
@@ -50,6 +52,7 @@ class RecommendedController extends Controller
         if ($recentAds->isEmpty()) {
             return $this->getGeneralRecommendations($limit);
         }
+
 
         $smartAds = $this->getAdsBasedOnRecentActivities($recentAds, $limit);
         
@@ -98,6 +101,7 @@ class RecommendedController extends Controller
     private function getAdsBasedOnRecentActivities($recentAds, $limit)
     {
         $categoryIds = $recentAds->pluck('category_id')->filter()->unique();
+        // dd($categoryIds);
         $locationKeywords = $recentAds->pluck('location')->filter()->unique();
 
         $ads = $this->advrepository->getAdsByCategoriesAndLocations(
