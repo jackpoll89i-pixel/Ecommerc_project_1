@@ -21,7 +21,7 @@ class RecommendedController extends Controller
 
     public function index(Request $request)
     {
-        $limitParam = (int) $request->get('limit', 10);
+        $limitParam = (int) $request->get('limit', 20);
         $limit = max(1, min(50, $limitParam));
 
         if (auth()->check()) {

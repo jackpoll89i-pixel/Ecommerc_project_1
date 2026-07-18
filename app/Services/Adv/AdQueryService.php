@@ -41,10 +41,13 @@ class AdQueryService
             $query->where('price', '<=', $max_price);
         }
 
-        $ads = $query->orderBy('views_count', 'desc')
-                    ->paginate(15);
+        $ads = $query->orderBy('views_count', 'desc')->get();
 
-        return $this->is_actionUser($ads);
+        $ads->transform(function ($adv) {
+        return $this->is_actionUser($adv);
+        });
+
+        return $ads;
         
     }  
 
