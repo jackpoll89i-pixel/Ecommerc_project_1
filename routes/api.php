@@ -14,6 +14,8 @@ use App\Http\Controllers\AdvController;
 use App\Http\Controllers\ForgetPasswordController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\RecommendedController;
+use App\Http\Controllers\WalletController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +46,7 @@ Route::middleware('banned')->group(function () {
             Route::post('/update',    [AuthController::class, 'EditInformation']); // edit user info
             Route::get('/favorites', [AdvController::class, 'getUserFavorites']);
             Route::get('/', [AuthController::class, 'getUser']);
+            Route::post('/wallet/charge', [WalletController::class, 'chargeRequest']);
         });
     });
 
@@ -127,6 +130,12 @@ Route::middleware('banned')->group(function () {
         Route::get('/dashboard-stats', [AdminStatsController::class, 'getDashboardStats']);
     
         Route::post('/clear-stats-cache', [AdminStatsController::class, 'clearStatsCache']);
-
+        // عرض الطلب lol
+        Route::get('/transactions/pending', [AdminTransactionController::class, 'pendingRequests']);
         
+        // الموافقة على الطلب
+        Route::post('/transactions/{id}/approve', [AdminTransactionController::class, 'approveRequest']);
+        
+        // رفض الطلب
+        Route::post('/transactions/{id}/reject', [AdminTransactionController::class, 'rejectRequest']);
     });
