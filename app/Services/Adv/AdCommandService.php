@@ -11,36 +11,65 @@ use Illuminate\Support\Facades\Storage;
 class AdCommandService
 {
     public function createAd($request): Adv
-    {  
-        if (is_array($request)) {
-            $data = $request;
-        } else {
-            $data = $request->only(['title', 'description', 'price', 'phone', 'category_id','location']);
+    {
+    if (is_array($request)) {
+        $data = $request;
+    } else {
+        
+        $data = $request->only(['title', 'description', 'price', 'phone', 'category_id', 'location', 'is_featured']);
+    }
+
+    $data['user_id'] = auth()->id();
+
+    $ad = DB::transaction(function () use ($data, $request) {
+        
+        
+        $user = auth()->user();
+        $isFeatured = isset($data['is_featured']) && $data['is_featured'] ? true : false;
+        $featuredCost = 50; // unique adv
+
+        if ($isFeatured) {
+
+            if (!$user->wallet || $user->wallet->balance < $featuredCost) {
+                
+                throw new \Exception('رصيدك غير كافٍ لتمييز الإعلان.');
+            }
+            
+            $user->wallet->decrement('balance', $featuredCost);
+        }
+        
+
+        if (!is_array($request)) {
+            if ($request->hasFile('image') && $request->file('image')->isValid()) {
+                $filename = time() . '.' . $request->file('image')->extension();
+                $path = Storage::disk('public')->putFileAs(
+                    'advs',
+                    $request->file('image'),
+                    $filename,
+                    ['visibility' => 'public']
+                );
+                $data['image'] = $path;
+            }
         }
 
-        $data['user_id'] = auth()->id();
         
-        $ad = DB::transaction(function () use ($data,$request) {
+        $createdAd = Adv::create($data);
+
+        
+        if ($isFeatured) {
             
-            if (!is_array($request)) {
-                if ($request->hasFile('image') && $request->file('image')->isValid()) {
-                    $filename = time() . '.' . $request->file('image')->extension();
-                    $path = Storage::disk('public')->putFileAs(
-                        'advs',
-                        $request->file('image'),
-                        $filename,
-                        ['visibility' => 'public']
-                    );
-                    $data['image'] = $path;
-                }
-            }
-            return Adv::create($data);
-        });
-        UpdateAdReadJob::dispatch('created', $ad);
-        
-        AdPublishedEvent::dispatch($ad, auth()->user());
-        
-        return $ad;
+            $platformWalletService = app(\App\Services\PlatformWalletService::class);
+            $platformWalletService->addProfit($featuredCost, 'featured_ad', $createdAd->id, 'عمولة إعلان مميز');
+        }
+
+        return $createdAd;
+    });
+
+    UpdateAdReadJob::dispatch('created', $ad);
+
+    AdPublishedEvent::dispatch($ad, auth()->user());
+
+    return $ad;
     }
 
     public function updateAd(Adv $ad, $request): Adv

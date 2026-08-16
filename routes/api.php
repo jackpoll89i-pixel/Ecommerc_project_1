@@ -15,7 +15,7 @@ use App\Http\Controllers\ForgetPasswordController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\RecommendedController;
 use App\Http\Controllers\WalletController;
-
+use App\Http\Controllers\AdminPlatformWalletController;
 
 /*
 |--------------------------------------------------------------------------
@@ -130,12 +130,13 @@ Route::middleware('banned')->group(function () {
         Route::get('/dashboard-stats', [AdminStatsController::class, 'getDashboardStats']);
     
         Route::post('/clear-stats-cache', [AdminStatsController::class, 'clearStatsCache']);
+
         // عرض الطلب lol
         Route::get('/transactions/pending', [AdminTransactionController::class, 'pendingRequests']);
-        
         // الموافقة على الطلب
         Route::post('/transactions/{id}/approve', [AdminTransactionController::class, 'approveRequest']);
-        
         // رفض الطلب
         Route::post('/transactions/{id}/reject', [AdminTransactionController::class, 'rejectRequest']);
+        // عرض ارباح المنصة
+        Route::get('/platform-wallet', [AdminPlatformWalletController::class, 'index']);
     });

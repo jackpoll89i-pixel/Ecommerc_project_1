@@ -53,11 +53,22 @@ class AdvController extends Controller
     }
 
     public function store(StoreAdRequest $request)
-    {
+    {   
+
+        try {
         $ad = $this->commandService->createAd($request);
 
         return $this->success('تم نشر الإعلان بنجاح',$ad);
+        }
+        // exception for create ad in adcommand service
+        catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 400);
+        }
     }
+    
 
     public function search(SearchAdRequest $request)
     {
