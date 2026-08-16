@@ -16,6 +16,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\RecommendedController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\AdminPlatformWalletController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -139,4 +141,12 @@ Route::middleware('banned')->group(function () {
         Route::post('/transactions/{id}/reject', [AdminTransactionController::class, 'rejectRequest']);
         // عرض ارباح المنصة
         Route::get('/platform-wallet', [AdminPlatformWalletController::class, 'index']);
+    });
+
+
+    Route::middleware('auth:sanctum')->group(function () {
+    
+        Route::post('/payment/pay-to-center', [PaymentCenterController::class, 'pay']); 
+
+        Route::post('/orders/{orderId}/complete', [OrderController::class, 'completeOrder']);
     });
