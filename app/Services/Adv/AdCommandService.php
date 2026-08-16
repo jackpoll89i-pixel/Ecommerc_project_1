@@ -7,6 +7,10 @@ use App\Jobs\UpdateAdReadJob;
 use App\Events\AdPublishedEvent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Services\PlatformWalletService;
+use App\Http\Controllers\WalletController;
+use App\Models\Wallet;
+
 
 class AdCommandService
 {
@@ -23,21 +27,30 @@ class AdCommandService
 
     $ad = DB::transaction(function () use ($data, $request) {
         
-        
         $user = auth()->user();
-        $isFeatured = isset($data['is_featured']) && $data['is_featured'] ? true : false;
-        $featuredCost = 50; // unique adv
+        
+    
+        $isFeatured = isset($data['is_featured']) && $data['is_featured'] == true;
+        $featuredCost = 50; // 
 
         if ($isFeatured) {
-
-            $wallet = $user->wallet()->firstOrCreate([], ['balance' => 0]);
             
-            if (!$user->wallet || $user->wallet->balance < $featuredCost) {
-                
+            $userWallet = $user->wallet()->firstOrCreate([], ['balance' => 0]);
+
+            
+            if ($userWallet->balance < $featuredCost) {
                 throw new \Exception('رصيدك غير كافٍ لتمييز الإعلان.');
             }
+
             
-            $user->wallet->decrement('balance', $featuredCost);
+            $userWallet->decrement('balance', $featuredCost);
+
+            
+            app(PlatformWalletService::class)->addProfit(
+                amount: $featuredCost, 
+                type: 'ad_fee', 
+                notes: 'رسوم تمييز إعلان من المستخدم رقم ' . $user->id
+            );
         }
         
 

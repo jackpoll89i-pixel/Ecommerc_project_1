@@ -8,28 +8,30 @@ use Illuminate\Support\Facades\DB;
 
 class PlatformWalletService
 {
-    /**
-     *
-     */
     public function addProfit($amount, $type, $referenceId = null, $notes = null)
     {
-        // we assure the two op must initializ
-        DB::transaction(function () use ($amount, $type, $referenceId, $notes) {
-            
-            // seeder to the wallet 
-            $wallet = PlatformWallet::findOrFail(1);
+        return DB::transaction(function () use ($amount, $type, $referenceId, $notes) {
             
             
-            $wallet->increment('balance', $amount);
+            $platformWallet = PlatformWallet::first();
 
-            // auth for transaction 
-            PlatformTransaction::create([
-                'amount' => $amount,
-                'type' => $type,
-                'reference_id' => $referenceId,
-                'notes' => $notes,
-            ]);
+            if (!$platformWallet) {
+                throw new \Exception('محفظة المنصة غير موجودة.');
+            }
+
             
+            $platformWallet->increment('balance', $amount);
+
+            
+            PlatformTransaction::create([
+                'platform_wallet_id' => $platformWallet->id,
+                'amount' => $amount,
+                'type' => $type, 
+                'reference_id' => $referenceId,
+                'notes' => $notes
+            ]);
+
+            return true;
         });
     }
 }
