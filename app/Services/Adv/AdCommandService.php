@@ -30,6 +30,8 @@ class AdCommandService
 
         if ($isFeatured) {
 
+            $wallet = $user->wallet()->firstOrCreate([], ['balance' => 0]);
+            
             if (!$user->wallet || $user->wallet->balance < $featuredCost) {
                 
                 throw new \Exception('رصيدك غير كافٍ لتمييز الإعلان.');

@@ -47,6 +47,7 @@ class AuthController extends Controller
         event(new UserRegistered($user, $code));
 
         return $this->success('تم إرسال كود التحقق', ['user' => $user, 'code' => $code]);
+        
     }
 
     public function EditInformation(UpdateUserInformationRequest $request)
@@ -77,7 +78,7 @@ class AuthController extends Controller
             throw new CodeSendingException('فشل إرسال الكود');
         }
 
-        return $this->success('تم إرسال كود التحقق');
+        return $this->success('تم إرسال كود التحقق',['user' => $user, 'code' => $code]);
     }
 
     /**
@@ -97,7 +98,7 @@ class AuthController extends Controller
 
         event(new UserRegistered($user, $code));
 
-        return $this->success('تم إرسال الكود بنجاح');
+        return $this->success('تم إرسال الكود بنجاح',['user' => $user, 'code' => $code]);
     }
 
     /**
