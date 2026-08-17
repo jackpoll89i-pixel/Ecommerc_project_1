@@ -28,10 +28,25 @@ class CenterPaymentService
             }
             $payerWallet->decrement('balance', $totalAmount);
 
+            \App\Models\Transaction::create([
+                'wallet_id' => $payerWallet->id,
+                'amount' => $totalAmount,
+                'type' => 'withdrawal',
+                'status' => 'approved',
+                'reference_id' => 'pay_center_' . uniqid(),
+            ]);
             
             $centerWallet = $center->wallet()->firstOrCreate([], ['balance' => 0]);
             $centerWallet->increment('balance', $centerShare);
 
+            
+            \App\Models\Transaction::create([
+                'wallet_id' => $centerWallet->id,
+                'amount' => $centerShare,
+                'type' => 'deposit',
+                'status' => 'approved',
+                'reference_id' => 'receive_center_' . uniqid(),
+            ]);
             
             if ($platformCommission > 0) {
                 app(PlatformWalletService::class)->addProfit(

@@ -28,10 +28,25 @@ class OrderPaymentService
             }
             $buyerWallet->decrement('balance', $totalAmount);
 
+            \App\Models\Transaction::create([
+                'wallet_id' => $buyerWallet->id,
+                'amount' => $totalAmount,
+                'type' => 'withdrawal',
+                'status' => 'approved',
+                'reference_id' => 'order_pay_' . $orderId,
+            ]);
             
             $sellerWallet = $seller->wallet()->firstOrCreate([], ['balance' => 0]);
             $sellerWallet->increment('balance', $sellerShare);
 
+
+            \App\Models\Transaction::create([
+                'wallet_id' => $sellerWallet->id,
+                'amount' => $sellerShare,
+                'type' => 'deposit',
+                'status' => 'approved',
+                'reference_id' => 'order_receive_' . $orderId,
+            ]);
             
             if ($platformCommission > 0) {
                 app(PlatformWalletService::class)->addProfit(

@@ -38,7 +38,7 @@ class AdCommandService
     
             if ($user->is_verified) {
                 
-                $featuredAdsThisMonth = Ad::where('user_id', $user->id)
+                $featuredAdsThisMonth = Adv::where('user_id', $user->id)
                     ->where('is_featured', true)
                     ->whereYear('created_at', now()->year)
                     ->whereMonth('created_at', now()->month)
@@ -59,7 +59,13 @@ class AdCommandService
 
                 
                 $userWallet->decrement('balance', $featuredCost);
-
+                \App\Models\Transaction::create([
+                        'wallet_id' => $userWallet->id,
+                        'amount' => $featuredCost,
+                        'type' => 'withdrawal',
+                        'status' => 'approved',
+                        'reference_id' => 'ad_' . uniqid(), 
+                    ]);
 
                 app(PlatformWalletService::class)->addProfit(
                     amount: $featuredCost, 
@@ -85,13 +91,6 @@ class AdCommandService
 
         
         $createdAd = Adv::create($data);
-
-        
-        if ($isFeatured) {
-            
-            $platformWalletService = app(\App\Services\PlatformWalletService::class);
-            $platformWalletService->addProfit($featuredCost, 'featured_ad', $createdAd->id, 'عمولة إعلان مميز');
-        }
 
         return $createdAd;
     });
