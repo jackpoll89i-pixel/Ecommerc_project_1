@@ -28,29 +28,45 @@ class AdCommandService
     $ad = DB::transaction(function () use ($data, $request) {
         
         $user = auth()->user();
-        
-    
         $isFeatured = isset($data['is_featured']) && $data['is_featured'] == true;
-        $featuredCost = 50; // 
+        $featuredCost = 50;
+        $freeAdsLimit = 1; 
 
         if ($isFeatured) {
-            
-            $userWallet = $user->wallet()->firstOrCreate([], ['balance' => 0]);
+            $shouldPay = true; 
 
-            
-            if ($userWallet->balance < $featuredCost) {
-                throw new \Exception('رصيدك غير كافٍ لتمييز الإعلان.');
+    
+            if ($user->is_verified) {
+                
+                $featuredAdsThisMonth = Ad::where('user_id', $user->id)
+                    ->where('is_featured', true)
+                    ->whereYear('created_at', now()->year)
+                    ->whereMonth('created_at', now()->month)
+                    ->count();
+
+                if ($featuredAdsThisMonth < $freeAdsLimit) {
+                    $shouldPay = false; 
+                }
             }
 
             
-            $userWallet->decrement('balance', $featuredCost);
+            if ($shouldPay) {
+                $userWallet = $user->wallet()->firstOrCreate([], ['balance' => 0]);
 
-            
-            app(PlatformWalletService::class)->addProfit(
-                amount: $featuredCost, 
-                type: 'ad_fee', 
-                notes: 'رسوم تمييز إعلان من المستخدم رقم ' . $user->id
-            );
+                if ($userWallet->balance < $featuredCost) {
+                    throw new \Exception('رصيدك غير كافٍ لتمييز الإعلان. قم بتوثيق حسابك للحصول على تمييز مجاني شهرياً!');
+                }
+
+                
+                $userWallet->decrement('balance', $featuredCost);
+
+
+                app(PlatformWalletService::class)->addProfit(
+                    amount: $featuredCost, 
+                    type: 'ad_fee', 
+                    notes: "رسوم تمييز إعلان من المستخدم رقم {$user->id}"
+                );
+            }
         }
         
 

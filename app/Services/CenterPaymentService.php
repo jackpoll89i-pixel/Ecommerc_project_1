@@ -9,26 +9,23 @@ use App\Services\PlatformWalletService;
 
 class CenterPaymentService
 {
-    public function payToCenter($payerId, $centerId, $totalAmount)
+   public function payToCenter($payerId, $centerId, $totalAmount)
     {
-        
-        $commissionRate = 0.10; 
-        $platformCommission = $totalAmount * $commissionRate; 
-        $centerShare = $totalAmount - $platformCommission;    
+        return DB::transaction(function () use ($payerId, $centerId, $totalAmount) {
+            $user = User::findOrFail($payerId); 
+            $center = User::findOrFail($centerId); 
 
-        return DB::transaction(function () use ($payerId, $centerId, $totalAmount, $platformCommission, $centerShare) {
             
+            $commissionRate = $user->is_verified ? 0 : 0.10; 
             
-            $user = User::findOrFail($payerId);
-            $center = User::findOrFail($centerId);
+            $platformCommission = $totalAmount * $commissionRate; 
+            $centerShare = $totalAmount - $platformCommission;
 
             
             $payerWallet = $user->wallet()->firstOrCreate([], ['balance' => 0]);
             if ($payerWallet->balance < $totalAmount) {
                 throw new \Exception('رصيدك غير كافٍ لإتمام عملية الدفع.');
             }
-
-            
             $payerWallet->decrement('balance', $totalAmount);
 
             
@@ -36,11 +33,13 @@ class CenterPaymentService
             $centerWallet->increment('balance', $centerShare);
 
             
-            app(PlatformWalletService::class)->addProfit(
-                amount: $platformCommission,
-                type: 'center_commission',
-                notes: "عمولة دفع للمركز رقم {$center->id} من المستخدم رقم {$user->id}"
-            );
+            if ($platformCommission > 0) {
+                app(PlatformWalletService::class)->addProfit(
+                    amount: $platformCommission,
+                    type: 'center_commission',
+                    notes: "عمولة دفع للمركز رقم {$center->id} من المستخدم رقم {$user->id}"
+                );
+            }
 
             return [
                 'total_paid' => $totalAmount,

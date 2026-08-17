@@ -9,6 +9,30 @@ use App\Models\Wallet;
 
 class WalletController extends Controller
 {
+
+    public function myWallet()
+    {
+        $user = auth()->user();
+        
+        
+        $wallet = $user->wallet()->firstOrCreate([], ['balance' => 0]);
+
+        
+        $transactions = Transaction::where('wallet_id', $wallet->id)
+                                    ->orderBy('created_at', 'desc')
+                                    ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم جلب بيانات المحفظة بنجاح',
+            'data' => [
+                'current_balance' => $wallet->balance,
+                'transactions' => $transactions
+            ]
+        ]);
+    }
+
+
    public function chargeRequest(Request $request)
 {
     $request->validate([

@@ -49,6 +49,7 @@ Route::middleware('banned')->group(function () {
             Route::get('/favorites', [AdvController::class, 'getUserFavorites']);
             Route::get('/', [AuthController::class, 'getUser']);
             Route::post('/wallet/charge', [WalletController::class, 'chargeRequest']);
+            Route::get('/my-wallet', [WalletController::class, 'myWallet']);
         });
     });
 
@@ -139,7 +140,7 @@ Route::middleware('banned')->group(function () {
         Route::post('/transactions/{id}/approve', [AdminTransactionController::class, 'approveRequest']);
         // رفض الطلب
         Route::post('/transactions/{id}/reject', [AdminTransactionController::class, 'rejectRequest']);
-        // عرض ارباح المنصة
+    
         Route::get('/platform-wallet', [AdminPlatformWalletController::class, 'index']);
     });
 
