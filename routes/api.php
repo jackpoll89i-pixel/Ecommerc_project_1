@@ -50,6 +50,7 @@ Route::middleware('banned')->group(function () {
             Route::get('/', [AuthController::class, 'getUser']);
             Route::post('/wallet/charge', [WalletController::class, 'chargeRequest']);
             Route::get('/my-wallet', [WalletController::class, 'myWallet']);
+            Route::post('/wallet/withdraw', [WalletController::class, 'withdrawRequest']);
         });
     });
 
@@ -134,14 +135,12 @@ Route::middleware('banned')->group(function () {
     
         Route::post('/clear-stats-cache', [AdminStatsController::class, 'clearStatsCache']);
 
-        // عرض الطلب lol
+        
         Route::get('/transactions/pending', [AdminTransactionController::class, 'pendingRequests']);
-        // الموافقة على الطلب
         Route::post('/transactions/{id}/approve', [AdminTransactionController::class, 'approveRequest']);
-        // رفض الطلب
         Route::post('/transactions/{id}/reject', [AdminTransactionController::class, 'rejectRequest']);
-    
         Route::get('/platform-wallet', [AdminPlatformWalletController::class, 'index']);
+        Route::post('/admin/transactions/{transactionId}/process-withdraw', [AdminTransactionController::class, 'processWithdrawal']);
     });
 
 
@@ -150,4 +149,8 @@ Route::middleware('banned')->group(function () {
         Route::post('/payment/pay-to-center', [PaymentCenterController::class, 'pay']); 
 
         Route::post('/orders/{orderId}/complete', [OrderController::class, 'completeOrder']);
+
+        Route::post('/orders/create', [\App\Http\Controllers\OrderController::class, 'store']);
+    
+      
     });

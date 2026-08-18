@@ -33,6 +33,7 @@ class RecommendedController extends Controller
             ->where('is_active', 1)
             ->orderBy('interactions_count', 'desc')
             ->orderBy('views_count', 'desc')
+            ->orderBy('is_featured', 'desc')
             ->limit($limit)
             ->get();
 

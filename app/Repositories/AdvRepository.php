@@ -19,6 +19,7 @@ class AdvRepository
             ->where('is_active', 1)
             ->orderBy('interactions_count', 'desc')
             ->orderBy('views_count', 'desc')
+            ->orderBy('is_featured', 'desc')
             ->limit($limit)
             ->get();
     }
@@ -47,6 +48,7 @@ class AdvRepository
 
         return $query->orderBy('interactions_count', 'desc')
             ->orderBy('views_count', 'desc')
+            ->orderBy('is_featured', 'desc')
             ->limit($limit)
             ->get();
     }
@@ -62,7 +64,11 @@ class AdvRepository
             $query->where('user_id', '!=', $excludeUserId);
         }
 
-        return $query->orderBy('created_at', 'desc')
+        return $query
+            ->orderBy('interactions_count', 'desc')
+            ->orderBy('views_count', 'desc')
+            ->orderBy('is_featured', 'desc')
+            ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();
     }
@@ -81,10 +87,13 @@ class AdvRepository
             $query->where('user_id', '!=', $excludeUserId);
         }
         
-        return $query->orderBy('views_count', 'desc') // ترتيب حسب الشعبية
-            ->orderBy('created_at', 'desc') // ثم حسب الأحدث
-            ->take($limit)
-            ->get();
+        return $query
+                ->orderBy('views_count', 'desc') // ترتيب حسب الشعبية
+                ->orderBy('is_featured', 'desc')
+                ->orderBy('interactions_count', 'desc')
+                ->orderBy('created_at', 'desc') // حسب الاحدث
+                ->take($limit)
+                ->get();
     }
 
     // دالة جديدة للحصول على توصيات بديلة
@@ -99,6 +108,7 @@ class AdvRepository
         
         return $query->orderBy('interactions_count', 'desc')
             ->orderBy('views_count', 'desc')
+            ->orderBy('is_featured', 'desc')
             ->take($limit)
             ->get();
     }
@@ -145,6 +155,9 @@ class AdvRepository
                 ->where('user_id', $followingUserId)
                 ->where('is_active', 1)
                 ->whereNotIn('id', $excludeIds)
+                ->orderBy('interactions_count', 'desc')
+                ->orderBy('views_count', 'desc')
+                ->orderBy('is_featured', 'desc')
                 ->orderBy('created_at', 'desc')
                 ->limit($adsPerUser)
                 ->get();

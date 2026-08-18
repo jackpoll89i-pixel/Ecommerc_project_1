@@ -54,4 +54,37 @@ class AdminTransactionController extends Controller
 
         return response()->json(['success' => true, 'message' => 'تم رفض طلب الشحن.']);
     }
+
+    public function processWithdrawal(Request $request, $transactionId)
+    {
+        $request->validate([
+            'status' => 'required|in:approved,rejected', 
+        ]);
+
+        $transaction = Transaction::findOrFail($transactionId);
+
+        
+        if ($transaction->type !== 'withdrawal' || $transaction->status !== 'pending') {
+            return response()->json(['success' => false, 'message' => 'هذه الحركة ليست طلب سحب قيد الانتظار'], 400);
+        }
+
+            DB::transaction(function () use ($transaction, $request) {
+            
+            
+            $transaction->update(['status' => $request->status]);
+
+            
+            if ($request->status === 'rejected') {
+                $wallet = $transaction->wallet;
+                $wallet->increment('balance', $transaction->amount);
+            }
+            
+        });
+
+        $message = $request->status === 'approved' 
+                    ? 'تمت الموافقة على السحب وتأكيد العملية' 
+                    : 'تم رفض طلب السحب وإعادة المبلغ لمحفظة المستخدم';
+
+        return response()->json(['success' => true, 'message' => $message]);
+    }
 }
